@@ -257,11 +257,12 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   };
 
   const imageStyle = {
-    width: '100%',
-    height: '100%',
+    maxWidth: '100%',
+    maxHeight: '100%',
     objectFit: 'contain',
-    padding: '0px',
-    maxHeight: '300px'
+    objectPosition: 'center',
+    display: 'block',
+    margin: '0 auto'
   };
 
   const dotsContainerStyle = {
