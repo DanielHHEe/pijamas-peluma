@@ -1352,7 +1352,7 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
             "Sua paz em forma de pijama"
           </p>
           <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-            © 2024 Todos os direitos reservados
+            © 2026 Todos os direitos reservados
           </p>
         </div>
       </footer>
