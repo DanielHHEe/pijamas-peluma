@@ -195,7 +195,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    padding: '16px'
+    padding: '16px',
+    boxSizing: 'border-box'
   };
 
   const modalStyle = {
@@ -207,18 +208,31 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     overflow: 'hidden',
     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    boxSizing: 'border-box'
   };
 
   const imageContainerStyle = {
     position: 'relative',
     background: 'linear-gradient(to bottom right, #f1f5f9, #f8fafc)',
-    aspectRatio: '1/1',
-    maxHeight: '300px',
+    width: '100%',
+    paddingTop: '100%',
     overflow: 'hidden',
+    boxSizing: 'border-box'
+  };
+
+  const imageWrapperStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    boxSizing: 'border-box'
   };
 
   const closeButtonStyle = {
@@ -253,16 +267,17 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     justifyContent: 'center',
     boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
     border: 'none',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    zIndex: 5
   };
 
   const imageStyle = {
     maxWidth: '100%',
     maxHeight: '100%',
+    width: 'auto',
+    height: 'auto',
     objectFit: 'contain',
-    objectPosition: 'center',
-    display: 'block',
-    margin: '0 auto'
+    display: 'block'
   };
 
   const dotsContainerStyle = {
@@ -271,13 +286,15 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
-    gap: '8px'
+    gap: '8px',
+    zIndex: 5
   };
 
   const infoContainerStyle = {
     padding: '24px',
     overflow: 'auto',
-    flex: 1
+    flex: 1,
+    boxSizing: 'border-box'
   };
 
   const headerInfoStyle = {
@@ -332,7 +349,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         justifyContent: 'center',
         gap: '8px',
         background: '#22c55e',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        boxSizing: 'border-box'
       };
     }
     if (product.estoque === 0) {
@@ -349,7 +367,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         justifyContent: 'center',
         gap: '8px',
         background: '#e2e8f0',
-        opacity: 0.7
+        opacity: 0.7,
+        boxSizing: 'border-box'
       };
     }
     return {
@@ -365,7 +384,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
       justifyContent: 'center',
       gap: '8px',
       background: '#DAC8B3',
-      transition: 'all 0.3s ease'
+      transition: 'all 0.3s ease',
+      boxSizing: 'border-box'
     };
   };
 
@@ -378,27 +398,29 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <button onClick={onClose} style={closeButtonStyle}>
-            <X style={{ width: '20px', height: '20px', color: '#475569' }} />
-          </button>
+          <div style={imageWrapperStyle}>
+            <button onClick={onClose} style={closeButtonStyle}>
+              <X style={{ width: '20px', height: '20px', color: '#475569' }} />
+            </button>
 
-          {images.length > 0 ? (
-            <img src={images[currentImageIndex]} alt={product.nome} style={imageStyle} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {images.length > 0 ? (
+              <img src={images[currentImageIndex]} alt={product.nome} style={imageStyle} />
+            ) : (
               <Package style={{ width: '64px', height: '64px', color: '#cbd5e1' }} />
-            </div>
-          )}
+            )}
 
-          {hasMultipleImages && (
-            <>
-              <button onClick={prevImage} style={{ ...navButtonStyle, left: '12px' }}>
-                <ChevronLeft style={{ width: '20px', height: '20px', color: '#475569' }} />
-              </button>
-              <button onClick={nextImage} style={{ ...navButtonStyle, right: '12px' }}>
-                <ChevronRight style={{ width: '20px', height: '20px', color: '#475569' }} />
-              </button>
+            {hasMultipleImages && (
+              <>
+                <button onClick={prevImage} style={{ ...navButtonStyle, left: '12px' }}>
+                  <ChevronLeft style={{ width: '20px', height: '20px', color: '#475569' }} />
+                </button>
+                <button onClick={nextImage} style={{ ...navButtonStyle, right: '12px' }}>
+                  <ChevronRight style={{ width: '20px', height: '20px', color: '#475569' }} />
+                </button>
+              </>
+            )}
 
+            {hasMultipleImages && (
               <div style={dotsContainerStyle}>
                 {images.map((_, index) => (
                   <button
@@ -416,8 +438,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
                   />
                 ))}
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
 
         <div style={infoContainerStyle}>
