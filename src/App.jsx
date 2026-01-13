@@ -215,7 +215,10 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     background: 'linear-gradient(to bottom right, #f1f5f9, #f8fafc)',
     aspectRatio: '1/1',
     maxHeight: '300px',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   };
 
   const closeButtonStyle = {
@@ -731,6 +734,13 @@ const ProductCard = ({ product, onProductClick }) => {
 // --- Cart Modal Component ---
 const CartModal = ({ isOpen, onClose, onCheckout }) => {
   const { cart, removeFromCart, updateQuantity, total } = useCart();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   if (!isOpen) return null;
 
@@ -877,6 +887,12 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
     transition: 'all 0.3s ease'
   };
 
+  // Tamanhos responsivos para mobile
+  const quantityButtonSize = isMobile ? '36px' : '26px';
+  const quantityIconSize = isMobile ? '18px' : '14px';
+  const trashButtonSize = isMobile ? '36px' : '26px';
+  const trashIconSize = isMobile ? '18px' : '14px';
+
   return (
     <div style={overlayStyle} onClick={onClose}>
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
@@ -932,13 +948,13 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                     <p style={{ color: 'rgb(15, 190, 64)', fontWeight: 'bold', margin: 0, fontSize: '13px' }}>R$ {item.preco?.toFixed(2)}</p>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                     <button
                       onClick={() => updateQuantity(item._id, item.quantidade - 1)}
                       style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '6px',
+                        width: quantityButtonSize,
+                        height: quantityButtonSize,
+                        borderRadius: '8px',
                         background: 'white',
                         border: '1px solid #e2e8f0',
                         display: 'flex',
@@ -947,15 +963,15 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                         cursor: 'pointer'
                       }}
                     >
-                      <Minus style={{ width: '14px', height: '14px', color: '#475569' }} />
+                      <Minus style={{ width: quantityIconSize, height: quantityIconSize, color: '#475569' }} />
                     </button>
-                    <span style={{ width: '22px', textAlign: 'center', fontWeight: 'bold', color: '#1e293b', fontSize: '13px' }}>{item.quantidade}</span>
+                    <span style={{ width: '24px', textAlign: 'center', fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>{item.quantidade}</span>
                     <button
                       onClick={() => updateQuantity(item._id, item.quantidade + 1)}
                       style={{
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '6px',
+                        width: quantityButtonSize,
+                        height: quantityButtonSize,
+                        borderRadius: '8px',
                         background: 'white',
                         border: '1px solid #e2e8f0',
                         display: 'flex',
@@ -964,16 +980,16 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                         cursor: 'pointer'
                       }}
                     >
-                      <Plus style={{ width: '14px', height: '14px', color: '#475569' }} />
+                      <Plus style={{ width: quantityIconSize, height: quantityIconSize, color: '#475569' }} />
                     </button>
                   </div>
 
                   <button
                     onClick={() => removeFromCart(item._id)}
                     style={{
-                      width: '26px',
-                      height: '26px',
-                      borderRadius: '6px',
+                      width: trashButtonSize,
+                      height: trashButtonSize,
+                      borderRadius: '8px',
                       background: '#fef2f2',
                       border: 'none',
                       display: 'flex',
@@ -983,7 +999,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                       flexShrink: 0
                     }}
                   >
-                    <Trash2 style={{ width: '14px', height: '14px', color: '#ef4444' }} />
+                    <Trash2 style={{ width: trashIconSize, height: trashIconSize, color: '#ef4444' }} />
                   </button>
                 </div>
               ))}
@@ -1283,7 +1299,7 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
   const footerQuoteStyle = {
     fontFamily: "'Georgia', 'Times New Roman', serif",
     fontStyle: 'italic',
-    fontSize: '20px',
+    fontSize: '18px',
     color: '#e2e8f0',
     marginBottom: '24px',
     letterSpacing: '0.5px'
@@ -1299,13 +1315,13 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
         @media (max-width: 768px) {
           .grid-container {
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
-            gap: 12px !important;
+            gap: 4px !important;
           }
         }
         @media (max-width: 480px) {
           .grid-container {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 8px !important;
+            gap: 2px !important;
           }
         }
         /* Prevent zoom on iOS inputs */
