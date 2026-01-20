@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { ShoppingCart, X, Plus, Minus, Trash2, Moon, ChevronLeft, ChevronRight, Package, MapPin, User, Home, Building, Send, Check } from 'lucide-react';
+import { ShoppingCart, X, Plus, Minus, Trash2, Moon, ChevronLeft, ChevronRight, Package, MapPin, User, Home, Building, Send, Check, Filter } from 'lucide-react';
 import { listarProdutos } from './services/api';
 
 // --- Cart Context ---
@@ -167,6 +167,114 @@ const Header = ({ onCartClick }) => {
         </button>
       </div>
     </header>
+  );
+};
+
+// --- Filter Component ---
+const FilterBar = ({ activeFilter, onFilterChange, adultoCount, infantilCount }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const filterBarStyle = {
+    background: 'white',
+    padding: isMobile ? '12px 16px' : '16px 24px',
+    marginBottom: isMobile ? '16px' : '24px',
+    borderRadius: '12px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    border: '1px solid #f1f5f9'
+  };
+
+  const filterContainerStyle = {
+    maxWidth: '1280px',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: isMobile ? '12px' : '16px',
+    flexWrap: 'wrap'
+  };
+
+  const filterTitleStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: isMobile ? '14px' : '16px',
+    fontWeight: '600',
+    color: '#475569',
+    margin: 0
+  };
+
+  const filtersContainerStyle = {
+    display: 'flex',
+    gap: isMobile ? '8px' : '12px',
+    flexWrap: 'wrap'
+  };
+
+  const filterButtonStyle = (isActive) => ({
+    padding: isMobile ? '8px 16px' : '10px 20px',
+    borderRadius: '9999px',
+    border: 'none',
+    background: isActive ? '#9333ea' : '#f1f5f9',
+    color: isActive ? 'white' : '#64748b',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    fontSize: isMobile ? '13px' : '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  });
+
+  const counterStyle = {
+    background: 'rgba(255,255,255,0.2)',
+    padding: '2px 6px',
+    borderRadius: '9999px',
+    fontSize: '12px',
+    fontWeight: 'bold'
+  };
+
+  return (
+    <div style={filterBarStyle}>
+      <div style={filterContainerStyle}>
+        <div style={filterTitleStyle}>
+          <Filter size={isMobile ? 16 : 18} />
+          <span>Filtrar por:</span>
+        </div>
+        
+        <div style={filtersContainerStyle}>
+          <button
+            onClick={() => onFilterChange('todos')}
+            style={filterButtonStyle(activeFilter === 'todos')}
+          >
+            Todos
+          </button>
+          
+          <button
+            onClick={() => onFilterChange('Adulto')}
+            style={filterButtonStyle(activeFilter === 'Adulto')}
+          >
+            Adulto
+            <span style={counterStyle}>
+              {adultoCount || 0}
+            </span>
+          </button>
+          
+          <button
+            onClick={() => onFilterChange('Infantil')}
+            style={filterButtonStyle(activeFilter === 'Infantil')}
+          >
+            Infantil
+            <span style={counterStyle}>
+              {infantilCount || 0}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -1498,12 +1606,22 @@ const CheckoutModal = ({ isOpen, onClose }) => {
 const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, setCheckoutOpen, selectedProduct, setSelectedProduct }) => {
   const { addToCart } = useCart();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [filter, setFilter] = useState('todos');
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Filtrar produtos com base no filtro selecionado
+  const filteredProducts = filter === 'todos' 
+    ? products 
+    : products.filter(product => product.tipo === filter);
+
+  // Contar produtos por categoria
+  const adultoCount = products.filter(p => p.tipo === 'Adulto').length;
+  const infantilCount = products.filter(p => p.tipo === 'Infantil').length;
 
   const containerStyle = {
     minHeight: '100vh',
@@ -1611,6 +1729,13 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
       `}</style>
       
       <Header onCartClick={() => setCartOpen(true)} />
+      
+      <FilterBar 
+        activeFilter={filter} 
+        onFilterChange={setFilter}
+        adultoCount={adultoCount}
+        infantilCount={infantilCount}
+      />
 
       <main style={mainStyle}>
         {loading ? (
@@ -1618,21 +1743,70 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
             <div style={spinnerStyle} />
             <p style={{ color: '#94a3b8' }}>Carregando produtos...</p>
           </div>
-        ) : products.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
             <Package size={64} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-            <p style={{ color: '#94a3b8' }}>Nenhum produto encontrado</p>
+            <p style={{ color: '#94a3b8' }}>
+              {filter === 'todos' 
+                ? 'Nenhum produto encontrado' 
+                : filter === 'Adulto' 
+                  ? 'Nenhum produto adulto encontrado' 
+                  : 'Nenhum produto infantil encontrado'
+              }
+            </p>
+            {filter !== 'todos' && (
+              <button
+                onClick={() => setFilter('todos')}
+                style={{
+                  marginTop: '16px',
+                  padding: '10px 20px',
+                  background: '#DAC8B3',
+                  color: '#1e293b',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Ver todos os produtos
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid-container" style={gridStyle}>
-            {products.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                onProductClick={setSelectedProduct}
-              />
-            ))}
-          </div>
+          <>
+            <div style={{ 
+              marginBottom: isMobile ? '16px' : '24px', 
+              padding: isMobile ? '12px 16px' : '16px 24px',
+              background: '#f8fafc',
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <p style={{ 
+                margin: 0, 
+                color: '#475569',
+                fontSize: isMobile ? '14px' : '16px',
+                fontWeight: '500'
+              }}>
+                {filter === 'todos' 
+                  ? `Mostrando todos os ${filteredProducts.length} produtos`
+                  : filter === 'Adulto'
+                    ? `Mostrando ${filteredProducts.length} produto${filteredProducts.length !== 1 ? 's' : ''} adulto${filteredProducts.length !== 1 ? 's' : ''}`
+                    : `Mostrando ${filteredProducts.length} produto${filteredProducts.length !== 1 ? 's' : ''} infantil${filteredProducts.length !== 1 ? 's' : ''}`
+                }
+              </p>
+            </div>
+            
+            <div className="grid-container" style={gridStyle}>
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onProductClick={setSelectedProduct}
+                />
+              ))}
+            </div>
+          </>
         )}
       </main>
 
