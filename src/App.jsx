@@ -9,32 +9,48 @@ const useCart = () => useContext(CartContext);
 const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, tamanhoSelecionado, quantidade = 1) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item._id === product._id);
+      const itemKey = `${product._id}_${tamanhoSelecionado}`;
+      const existing = prev.find((item) => item.key === itemKey);
+      
       if (existing) {
         return prev.map((item) =>
-          item._id === product._id
-            ? { ...item, quantidade: item.quantidade + 1 }
+          item.key === itemKey
+            ? { ...item, quantidade: item.quantidade + quantidade }
             : item
         );
       }
-      return [...prev, { ...product, quantidade: 1 }];
+      
+      // Para produtos com estoque por tamanho
+      const estoqueAtual = product.estoque?.[tamanhoSelecionado] || 
+                          product.estoque?.UNICO || 
+                          product.estoque?.total || 
+                          product.estoque || 
+                          0;
+      
+      return [...prev, { 
+        ...product, 
+        key: itemKey,
+        quantidade,
+        tamanhoSelecionado,
+        estoqueAtual: Number(estoqueAtual) || 0
+      }];
     });
   };
 
-  const removeFromCart = (productId) => {
-    setCart((prev) => prev.filter((item) => item._id !== productId));
+  const removeFromCart = (itemKey) => {
+    setCart((prev) => prev.filter((item) => item.key !== itemKey));
   };
 
-  const updateQuantity = (productId, quantidade) => {
+  const updateQuantity = (itemKey, quantidade) => {
     if (quantidade <= 0) {
-      removeFromCart(productId);
+      removeFromCart(itemKey);
       return;
     }
     setCart((prev) =>
       prev.map((item) =>
-        item._id === productId ? { ...item, quantidade } : item
+        item.key === itemKey ? { ...item, quantidade } : item
       )
     );
   };
@@ -44,7 +60,15 @@ const CartProvider = ({ children }) => {
   const totalItems = cart.reduce((acc, item) => acc + item.quantidade, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, total, totalItems }}>
+    <CartContext.Provider value={{ 
+      cart, 
+      addToCart, 
+      removeFromCart, 
+      updateQuantity, 
+      clearCart, 
+      total, 
+      totalItems 
+    }}>
       {children}
     </CartContext.Provider>
   );
@@ -77,7 +101,7 @@ const Header = ({ onCartClick }) => {
   };
 
   const logoImageStyle = {
-    height: '80px',
+    height: '100px',
     borderRadius: '12px',
     objectFit: 'contain'
   };
@@ -137,17 +161,50 @@ const Header = ({ onCartClick }) => {
   );
 };
 
-// --- Product Modal Component ---
+// --- Product Modal Component COM SELEÇÃO DE TAMANHO ---
 const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [added, setAdded] = useState(false);
+  const [tamanhoSelecionado, setTamanhoSelecionado] = useState('');
+  const [quantidade, setQuantidade] = useState(1);
 
   if (!isOpen || !product) return null;
 
   const images = product.imagens && product.imagens.length > 0 ? product.imagens : [];
   const hasMultipleImages = images.length > 1;
+
+  // Determinar tamanhos disponíveis
+  const getTamanhosDisponiveis = () => {
+    if (!product.estoque || typeof product.estoque !== 'object') {
+      return ['UNICO'];
+    }
+    
+    const estoqueObj = product.estoque;
+    const tamanhos = Object.keys(estoqueObj);
+    
+    // Se for produto Adulto com tamanhos específicos
+    if (product.tipo === 'Adulto' && 
+        Array.isArray(product.tamanho) && 
+        product.tamanho.length > 0 && 
+        product.tamanho[0] !== "N/A") {
+      
+      return product.tamanho.filter(tam => 
+        Number(estoqueObj[tam] || estoqueObj.UNICO || 0) > 0
+      );
+    }
+    
+    // Para outros produtos, mostrar tamanhos com estoque > 0
+    return tamanhos.filter(tam => Number(estoqueObj[tam]) > 0);
+  };
+
+  const tamanhosDisponiveis = getTamanhosDisponiveis();
+  
+  // Estoque atual para o tamanho selecionado
+  const estoqueAtual = tamanhoSelecionado 
+    ? Number(product.estoque?.[tamanhoSelecionado] || 0)
+    : 0;
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -178,12 +235,26 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   };
 
   const handleAddToCart = () => {
-    onAddToCart(product);
+    if (!tamanhoSelecionado && tamanhosDisponiveis.length > 0) {
+      return;
+    }
+    
+    const tamanhoFinal = tamanhoSelecionado || 'UNICO';
+    onAddToCart(product, tamanhoFinal, quantidade);
     setAdded(true);
     setTimeout(() => {
       setAdded(false);
       onClose();
+      setTamanhoSelecionado('');
+      setQuantidade(1);
     }, 800);
+  };
+
+  const handleQuantidadeChange = (delta) => {
+    const novaQuantidade = quantidade + delta;
+    if (novaQuantidade >= 1 && novaQuantidade <= estoqueAtual) {
+      setQuantidade(novaQuantidade);
+    }
   };
 
   const overlayStyle = {
@@ -324,7 +395,71 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     display: 'flex',
     flexWrap: 'wrap',
     gap: '8px',
-    marginBottom: '24px'
+    marginBottom: '16px'
+  };
+
+  const tamanhosContainerStyle = {
+    marginBottom: '16px'
+  };
+
+  const tamanhosLabelStyle = {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#475569',
+    marginBottom: '8px'
+  };
+
+  const tamanhosGridStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px'
+  };
+
+  const tamanhoButtonStyle = (tamanho) => ({
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: '1px solid',
+    background: tamanhoSelecionado === tamanho ? '#9333ea' : 'transparent',
+    color: tamanhoSelecionado === tamanho ? 'white' : '#475569',
+    borderColor: tamanhoSelecionado === tamanho ? '#9333ea' : '#e2e8f0',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.2s'
+  });
+
+  const quantidadeContainerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    marginBottom: '24px',
+    justifyContent: 'center'
+  };
+
+  const quantidadeButtonStyle = {
+    width: '40px',
+    height: '40px',
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    background: 'white',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer'
+  };
+
+  const quantidadeValueStyle = {
+    fontSize: '18px',
+    fontWeight: 'bold',
+    minWidth: '40px',
+    textAlign: 'center'
+  };
+
+  const estoqueInfoStyle = {
+    fontSize: '14px',
+    color: '#64748b',
+    textAlign: 'center',
+    marginTop: '8px'
   };
 
   const descriptionStyle = {
@@ -335,6 +470,10 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   };
 
   const getButtonStyle = () => {
+    const tamanhoObrigatorio = tamanhosDisponiveis.length > 0;
+    const podeAdicionar = !tamanhoObrigatorio || tamanhoSelecionado;
+    const estoqueSuficiente = quantidade <= estoqueAtual;
+
     if (added) {
       return {
         width: '100%',
@@ -353,7 +492,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         boxSizing: 'border-box'
       };
     }
-    if (product.estoque === 0) {
+    if (!podeAdicionar || !estoqueSuficiente || estoqueAtual === 0) {
       return {
         width: '100%',
         padding: '16px',
@@ -461,31 +600,56 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
                 {product.tipo === 'adulto' || product.tipo === 'Adulto' ? 'Adulto' : 'Infantil'}
               </span>
             )}
-            {product.tamanho && (
-              <span style={{
-                background: '#f1f5f9',
-                color: '#475569',
-                padding: '4px 12px',
-                borderRadius: '9999px',
-                fontSize: '12px',
-                fontWeight: '600'
-              }}>
-                Tam: {product.tamanho}
-              </span>
-            )}
-            {product.estoque !== undefined && (
-              <span style={{
-                padding: '4px 12px',
-                borderRadius: '9999px',
-                fontSize: '12px',
-                fontWeight: '600',
-                background: product.estoque > 0 ? '#dcfce7' : '#fee2e2',
-                color: product.estoque > 0 ? '#15803d' : '#dc2626'
-              }}>
-                {product.estoque > 0 ? `${product.estoque} em estoque` : 'Esgotado'}
-              </span>
-            )}
           </div>
+
+          {tamanhosDisponiveis.length > 0 && (
+            <div style={tamanhosContainerStyle}>
+              <div style={tamanhosLabelStyle}>Selecione o tamanho:</div>
+              <div style={tamanhosGridStyle}>
+                {tamanhosDisponiveis.map((tamanho) => (
+                  <button
+                    key={tamanho}
+                    onClick={() => setTamanhoSelecionado(tamanho)}
+                    style={tamanhoButtonStyle(tamanho)}
+                  >
+                    {tamanho === 'UNICO' ? 'Único' : tamanho}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={quantidadeContainerStyle}>
+            <button
+              onClick={() => handleQuantidadeChange(-1)}
+              disabled={quantidade <= 1}
+              style={{
+                ...quantidadeButtonStyle,
+                opacity: quantidade <= 1 ? 0.5 : 1,
+                cursor: quantidade <= 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <Minus style={{ width: '16px', height: '16px' }} />
+            </button>
+            <span style={quantidadeValueStyle}>{quantidade}</span>
+            <button
+              onClick={() => handleQuantidadeChange(1)}
+              disabled={quantidade >= estoqueAtual}
+              style={{
+                ...quantidadeButtonStyle,
+                opacity: quantidade >= estoqueAtual ? 0.5 : 1,
+                cursor: quantidade >= estoqueAtual ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <Plus style={{ width: '16px', height: '16px' }} />
+            </button>
+          </div>
+
+          {tamanhoSelecionado && (
+            <div style={estoqueInfoStyle}>
+              Estoque disponível: {estoqueAtual} unidades
+            </div>
+          )}
 
           {product.descricao && (
             <p style={descriptionStyle}>{product.descricao}</p>
@@ -493,7 +657,11 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
 
           <button
             onClick={handleAddToCart}
-            disabled={product.estoque === 0}
+            disabled={
+              (tamanhosDisponiveis.length > 0 && !tamanhoSelecionado) || 
+              estoqueAtual === 0 || 
+              quantidade > estoqueAtual
+            }
             style={getButtonStyle()}
           >
             {added ? (
@@ -504,7 +672,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
             ) : (
               <>
                 <ShoppingCart style={{ width: '20px', height: '20px' }} />
-                {product.estoque === 0 ? 'Produto Esgotado' : 'Adicionar ao Carrinho'}
+                {estoqueAtual === 0 ? 'Produto Esgotado' : 'Adicionar ao Carrinho'}
               </>
             )}
           </button>
@@ -520,10 +688,34 @@ const ProductCard = ({ product, onProductClick }) => {
   const [added, setAdded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  // Calcular estoque total do produto
+  const calcularEstoqueTotal = () => {
+    if (!product.estoque || typeof product.estoque !== 'object') {
+      return Number(product.estoque) || 0;
+    }
+    
+    const estoqueObj = product.estoque;
+    return Object.values(estoqueObj).reduce((sum, val) => sum + (Number(val) || 0), 0);
+  };
+
+  const estoqueTotal = calcularEstoqueTotal();
+  const esgotado = estoqueTotal === 0;
+
   const handleAdd = (e) => {
     e.stopPropagation();
-    if (product.estoque === 0) return;
-    addToCart(product);
+    if (esgotado) return;
+    
+    // Para produtos com tamanhos específicos, abre o modal
+    if (product.tipo === 'Adulto' && 
+        Array.isArray(product.tamanho) && 
+        product.tamanho.length > 0 && 
+        product.tamanho[0] !== "N/A") {
+      onProductClick(product);
+      return;
+    }
+    
+    // Para produtos sem tamanhos, adiciona direto com tamanho UNICO
+    addToCart(product, 'UNICO', 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
@@ -553,7 +745,6 @@ const ProductCard = ({ product, onProductClick }) => {
 
   const imageStyle = {
     width: '100%',
-   
     objectFit: 'contain',
     objectPosition: 'center',
     padding: '0px',
@@ -650,7 +841,7 @@ const ProductCard = ({ product, onProductClick }) => {
         transition: 'all 0.3s ease'
       };
     }
-    if (product.estoque === 0) {
+    if (esgotado) {
       return {
         width: '34px',
         height: '34px',
@@ -696,7 +887,7 @@ const ProductCard = ({ product, onProductClick }) => {
           </div>
         )}
         
-        {product.estoque === 0 && (
+        {esgotado && (
           <div style={soldOutBadgeStyle}>ESGOTADO</div>
         )}
         
@@ -721,20 +912,6 @@ const ProductCard = ({ product, onProductClick }) => {
               {product.tipo === 'adulto' || product.tipo === 'Adulto' ? 'Adulto' : 'Infantil'}
             </span>
           )}
-          {product.tamanho && (
-            <span style={{
-              background: '#f1f5f9',
-              color: '#64748b',
-              padding: '2px 7px',
-              borderRadius: '9999px',
-              fontSize: '9px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              {product.tamanho}
-            </span>
-          )}
         </div>
 
         <h3 style={titleStyle}>{product.nome}</h3>
@@ -743,7 +920,7 @@ const ProductCard = ({ product, onProductClick }) => {
           <span style={priceStyle}>R$ {product.preco?.toFixed(2)}</span>
           <button
             onClick={handleAdd}
-            disabled={product.estoque === 0}
+            disabled={esgotado}
             style={getAddButtonStyle()}
           >
             {added ? <Check style={{ width: '17px', height: '17px' }} /> : <Plus style={{ width: '17px', height: '17px' }} />}
@@ -942,7 +1119,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
           ) : (
             <div style={itemsContainerStyle}>
               {cart.map((item) => (
-                <div key={item._id} style={itemStyle}>
+                <div key={item.key} style={itemStyle}>
                   <div style={itemImageStyle}>
                     {item.imagens?.[0] ? (
                       <img src={item.imagens[0]} alt={item.nome} style={{ width: '100%', objectFit: 'contain' }} />
@@ -968,12 +1145,27 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden'
                     }}>{item.nome}</h4>
+                    
+                    {item.tamanhoSelecionado && item.tamanhoSelecionado !== 'UNICO' && (
+                      <span style={{ 
+                        fontSize: '11px', 
+                        color: '#64748b', 
+                        background: '#f1f5f9', 
+                        padding: '2px 6px', 
+                        borderRadius: '4px',
+                        alignSelf: 'flex-start',
+                        marginBottom: '2px'
+                      }}>
+                        Tamanho: {item.tamanhoSelecionado}
+                      </span>
+                    )}
+                    
                     <p style={{ color: 'rgb(15, 190, 64)', fontWeight: 'bold', margin: 0, fontSize: '13px' }}>R$ {item.preco?.toFixed(2)}</p>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                     <button
-                      onClick={() => updateQuantity(item._id, item.quantidade - 1)}
+                      onClick={() => updateQuantity(item.key, item.quantidade - 1)}
                       style={{
                         width: quantityButtonSize,
                         height: quantityButtonSize,
@@ -990,7 +1182,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                     </button>
                     <span style={{ width: '24px', textAlign: 'center', fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>{item.quantidade}</span>
                     <button
-                      onClick={() => updateQuantity(item._id, item.quantidade + 1)}
+                      onClick={() => updateQuantity(item.key, item.quantidade + 1)}
                       style={{
                         width: quantityButtonSize,
                         height: quantityButtonSize,
@@ -1008,7 +1200,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                   </div>
 
                   <button
-                    onClick={() => removeFromCart(item._id)}
+                    onClick={() => removeFromCart(item.key)}
                     style={{
                       width: trashButtonSize,
                       height: trashButtonSize,
@@ -1062,9 +1254,17 @@ const CheckoutModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Format products with sizes
     const produtos = cart
-      .map((item) => `• ${item.nome} (x${item.quantidade}) - R$ ${(item.preco * item.quantidade).toFixed(2)}`)
+      .map((item) => {
+        const tamanhoInfo = item.tamanhoSelecionado && item.tamanhoSelecionado !== 'UNICO' 
+          ? ` (Tamanho: ${item.tamanhoSelecionado})` 
+          : '';
+        return `• ${item.nome}${tamanhoInfo} (x${item.quantidade}) - R$ ${(item.preco * item.quantidade).toFixed(2)}`;
+      })
       .join('\n');
+    
     const mensagem = `*NOVO PEDIDO - Peluma Pijamas*\n\n*Cliente:* ${formData.nome}\n*Endereço:* ${formData.rua}, ${formData.numero} - ${formData.bairro}, ${formData.cidade}\n\n*Produtos:*\n${produtos}\n\n*Total:* R$ ${total.toFixed(2)}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(mensagem)}`, '_blank');
     clearCart();
@@ -1119,7 +1319,6 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     pointerEvents: 'none'
   };
 
-  // fontSize 16px prevents iOS zoom on input focus
   const inputStyle = {
     width: '100%',
     paddingLeft: '48px',
@@ -1424,12 +1623,29 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
-    listarProdutos()
-      .then((data) => {
-        setProducts(data);
+    const carregarProdutos = async () => {
+      try {
+        setLoading(true);
+        const data = await listarProdutos();
+        
+        // Formatar produtos para lidar com estoque por tamanho
+        const produtosFormatados = data.map(p => ({
+          ...p,
+          // Garantir que estoque seja sempre objeto
+          estoque: typeof p.estoque === 'object' ? p.estoque : 
+                   typeof p.estoque === 'number' ? { UNICO: p.estoque } : 
+                   { UNICO: 0 }
+        }));
+        
+        setProducts(produtosFormatados);
+      } catch (err) {
+        console.error('Erro ao carregar produtos:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    
+    carregarProdutos();
   }, []);
 
   return (
