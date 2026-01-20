@@ -77,9 +77,16 @@ const CartProvider = ({ children }) => {
 // --- Header Component ---
 const Header = ({ onCartClick }) => {
   const { totalItems } = useCart();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const headerStyle = {
-    padding: '10px 0',
+    padding: isMobile ? '8px 0' : '10px 0',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -93,7 +100,7 @@ const Header = ({ onCartClick }) => {
   const headerContentStyle = {
     width: '100%',
     maxWidth: '1280px',
-    padding: '0 16px',
+    padding: isMobile ? '0 12px' : '0 16px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -101,7 +108,7 @@ const Header = ({ onCartClick }) => {
   };
 
   const logoImageStyle = {
-    height: '100px',
+    height: isMobile ? '80px' : '100px',
     borderRadius: '12px',
     objectFit: 'contain'
   };
@@ -111,14 +118,15 @@ const Header = ({ onCartClick }) => {
     border: 'none',
     color: '#1e293b',
     borderRadius: '9999px',
-    padding: '10px 20px',
+    padding: isMobile ? '8px 16px' : '10px 20px',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '8px',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    fontSize: isMobile ? '14px' : '16px'
   };
 
   const badgeStyle = {
@@ -127,11 +135,12 @@ const Header = ({ onCartClick }) => {
     fontSize: '12px',
     fontWeight: 'bold',
     borderRadius: '9999px',
-    width: '20px',
+    minWidth: '20px',
     height: '20px',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    padding: '0 4px'
   };
 
   return (
@@ -150,7 +159,7 @@ const Header = ({ onCartClick }) => {
           onClick={onCartClick}
           style={cartButtonStyle}
         >
-          <ShoppingCart style={{ width: '20px', height: '20px' }} />
+          <ShoppingCart size={isMobile ? 18 : 20} />
           <span>Carrinho</span>
           {totalItems > 0 && (
             <span style={badgeStyle}>{totalItems}</span>
@@ -169,6 +178,13 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const [added, setAdded] = useState(false);
   const [tamanhoSelecionado, setTamanhoSelecionado] = useState('');
   const [quantidade, setQuantidade] = useState(1);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (!isOpen || !product) return null;
 
@@ -266,15 +282,15 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
-    padding: '16px',
+    padding: isMobile ? '8px' : '16px',
     boxSizing: 'border-box'
   };
 
   const modalStyle = {
     background: 'white',
-    borderRadius: '24px',
+    borderRadius: isMobile ? '20px' : '24px',
     width: '100%',
-    maxWidth: '512px',
+    maxWidth: isMobile ? '100%' : '512px',
     maxHeight: '90vh',
     overflow: 'hidden',
     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
@@ -308,11 +324,11 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
 
   const closeButtonStyle = {
     position: 'absolute',
-    top: '16px',
-    right: '16px',
+    top: isMobile ? '12px' : '16px',
+    right: isMobile ? '12px' : '16px',
     zIndex: 10,
-    width: '40px',
-    height: '40px',
+    width: isMobile ? '36px' : '40px',
+    height: isMobile ? '36px' : '40px',
     background: 'rgba(255,255,255,0.9)',
     backdropFilter: 'blur(4px)',
     borderRadius: '9999px',
@@ -328,8 +344,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     position: 'absolute',
     top: '50%',
     transform: 'translateY(-50%)',
-    width: '40px',
-    height: '40px',
+    width: isMobile ? '36px' : '40px',
+    height: isMobile ? '36px' : '40px',
     background: 'rgba(255,255,255,0.9)',
     backdropFilter: 'blur(4px)',
     borderRadius: '9999px',
@@ -353,7 +369,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
 
   const dotsContainerStyle = {
     position: 'absolute',
-    bottom: '16px',
+    bottom: isMobile ? '12px' : '16px',
     left: '50%',
     transform: 'translateX(-50%)',
     display: 'flex',
@@ -362,7 +378,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   };
 
   const infoContainerStyle = {
-    padding: '24px',
+    padding: isMobile ? '20px' : '24px',
     overflow: 'auto',
     flex: 1,
     boxSizing: 'border-box'
@@ -372,20 +388,21 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: '16px',
-    marginBottom: '16px'
+    gap: isMobile ? '12px' : '16px',
+    marginBottom: isMobile ? '12px' : '16px'
   };
 
   const titleStyle = {
-    fontSize: '20px',
+    fontSize: isMobile ? '18px' : '20px',
     fontWeight: 'bold',
     color: '#1e293b',
     margin: 0,
-    flex: 1
+    flex: 1,
+    lineHeight: 1.3
   };
 
   const priceStyle = {
-    fontSize: '22px',
+    fontSize: isMobile ? '20px' : '22px',
     fontWeight: 'bold',
     color: 'rgb(15, 190, 64)',
     whiteSpace: 'nowrap'
@@ -394,51 +411,54 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   const tagsContainerStyle = {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px',
-    marginBottom: '16px'
+    gap: isMobile ? '6px' : '8px',
+    marginBottom: isMobile ? '12px' : '16px'
   };
 
   const tamanhosContainerStyle = {
-    marginBottom: '16px'
+    marginBottom: isMobile ? '12px' : '16px'
   };
 
   const tamanhosLabelStyle = {
-    fontSize: '14px',
+    fontSize: isMobile ? '13px' : '14px',
     fontWeight: '600',
     color: '#475569',
-    marginBottom: '8px'
+    marginBottom: isMobile ? '6px' : '8px'
   };
 
   const tamanhosGridStyle = {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '8px'
+    gap: isMobile ? '6px' : '8px'
   };
 
   const tamanhoButtonStyle = (tamanho) => ({
-    padding: '8px 16px',
+    padding: isMobile ? '10px 14px' : '8px 16px',
     borderRadius: '8px',
     border: '1px solid',
     background: tamanhoSelecionado === tamanho ? '#9333ea' : 'transparent',
     color: tamanhoSelecionado === tamanho ? 'white' : '#475569',
     borderColor: tamanhoSelecionado === tamanho ? '#9333ea' : '#e2e8f0',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: isMobile ? '13px' : '14px',
     fontWeight: '500',
-    transition: 'all 0.2s'
+    transition: 'all 0.2s',
+    minWidth: isMobile ? '50px' : '60px',
+    textAlign: 'center',
+    flex: '1 0 auto'
   });
 
   const quantidadeContainerStyle = {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '24px',
+    gap: isMobile ? '16px' : '12px',
+    marginBottom: isMobile ? '20px' : '24px',
     justifyContent: 'center'
   };
 
   const quantidadeButtonStyle = {
-    width: '40px',
-    height: '40px',
+    width: isMobile ? '44px' : '40px',
+    height: isMobile ? '44px' : '40px',
     borderRadius: '8px',
     border: '1px solid #e2e8f0',
     background: 'white',
@@ -449,23 +469,23 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   };
 
   const quantidadeValueStyle = {
-    fontSize: '18px',
+    fontSize: isMobile ? '20px' : '18px',
     fontWeight: 'bold',
     minWidth: '40px',
     textAlign: 'center'
   };
 
   const estoqueInfoStyle = {
-    fontSize: '14px',
+    fontSize: isMobile ? '13px' : '14px',
     color: '#64748b',
     textAlign: 'center',
-    marginTop: '8px'
+    marginTop: isMobile ? '6px' : '8px'
   };
 
   const descriptionStyle = {
     color: '#64748b',
-    fontSize: '14px',
-    marginBottom: '24px',
+    fontSize: isMobile ? '13px' : '14px',
+    marginBottom: isMobile ? '20px' : '24px',
     lineHeight: '1.6'
   };
 
@@ -477,7 +497,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     if (added) {
       return {
         width: '100%',
-        padding: '16px',
+        padding: isMobile ? '14px' : '16px',
         borderRadius: '16px',
         fontWeight: 'bold',
         color: 'white',
@@ -489,13 +509,14 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         gap: '8px',
         background: '#22c55e',
         transition: 'all 0.3s ease',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        fontSize: isMobile ? '15px' : '16px'
       };
     }
     if (!podeAdicionar || !estoqueSuficiente || estoqueAtual === 0) {
       return {
         width: '100%',
-        padding: '16px',
+        padding: isMobile ? '14px' : '16px',
         borderRadius: '16px',
         fontWeight: 'bold',
         color: '#64748b',
@@ -507,12 +528,13 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         gap: '8px',
         background: '#e2e8f0',
         opacity: 0.7,
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        fontSize: isMobile ? '15px' : '16px'
       };
     }
     return {
       width: '100%',
-      padding: '16px',
+      padding: isMobile ? '14px' : '16px',
       borderRadius: '16px',
       fontWeight: 'bold',
       color: '#1e293b',
@@ -524,7 +546,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
       gap: '8px',
       background: '#DAC8B3',
       transition: 'all 0.3s ease',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      fontSize: isMobile ? '15px' : '16px'
     };
   };
 
@@ -539,22 +562,22 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         >
           <div style={imageWrapperStyle}>
             <button onClick={onClose} style={closeButtonStyle}>
-              <X style={{ width: '20px', height: '20px', color: '#475569' }} />
+              <X size={isMobile ? 18 : 20} color="#475569" />
             </button>
 
             {images.length > 0 ? (
               <img src={images[currentImageIndex]} alt={product.nome} style={imageStyle} />
             ) : (
-              <Package style={{ width: '64px', height: '64px', color: '#cbd5e1' }} />
+              <Package size={isMobile ? 48 : 64} color="#cbd5e1" />
             )}
 
             {hasMultipleImages && (
               <>
-                <button onClick={prevImage} style={{ ...navButtonStyle, left: '12px' }}>
-                  <ChevronLeft style={{ width: '20px', height: '20px', color: '#475569' }} />
+                <button onClick={prevImage} style={{ ...navButtonStyle, left: isMobile ? '8px' : '12px' }}>
+                  <ChevronLeft size={isMobile ? 18 : 20} color="#475569" />
                 </button>
-                <button onClick={nextImage} style={{ ...navButtonStyle, right: '12px' }}>
-                  <ChevronRight style={{ width: '20px', height: '20px', color: '#475569' }} />
+                <button onClick={nextImage} style={{ ...navButtonStyle, right: isMobile ? '8px' : '12px' }}>
+                  <ChevronRight size={isMobile ? 18 : 20} color="#475569" />
                 </button>
               </>
             )}
@@ -590,9 +613,9 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
           <div style={tagsContainerStyle}>
             {product.tipo && (
               <span style={{
-                padding: '4px 12px',
+                padding: isMobile ? '4px 10px' : '4px 12px',
                 borderRadius: '9999px',
-                fontSize: '12px',
+                fontSize: isMobile ? '11px' : '12px',
                 fontWeight: '600',
                 background: product.tipo === 'adulto' || product.tipo === 'Adulto' ? '#f3e8ff' : '#fce7f3',
                 color: product.tipo === 'adulto' || product.tipo === 'Adulto' ? '#7c3aed' : '#db2777'
@@ -629,7 +652,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
                 cursor: quantidade <= 1 ? 'not-allowed' : 'pointer'
               }}
             >
-              <Minus style={{ width: '16px', height: '16px' }} />
+              <Minus size={isMobile ? 20 : 18} />
             </button>
             <span style={quantidadeValueStyle}>{quantidade}</span>
             <button
@@ -641,7 +664,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
                 cursor: quantidade >= estoqueAtual ? 'not-allowed' : 'pointer'
               }}
             >
-              <Plus style={{ width: '16px', height: '16px' }} />
+              <Plus size={isMobile ? 20 : 18} />
             </button>
           </div>
 
@@ -666,12 +689,12 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
           >
             {added ? (
               <>
-                <Check style={{ width: '20px', height: '20px' }} />
+                <Check size={isMobile ? 18 : 20} />
                 Adicionado!
               </>
             ) : (
               <>
-                <ShoppingCart style={{ width: '20px', height: '20px' }} />
+                <ShoppingCart size={isMobile ? 18 : 20} />
                 {estoqueAtual === 0 ? 'Produto Esgotado' : 'Adicionar ao Carrinho'}
               </>
             )}
@@ -682,11 +705,18 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   );
 };
 
-// --- Product Card Component (15% smaller) ---
+// --- Product Card Component ---
 const ProductCard = ({ product, onProductClick }) => {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Calcular estoque total do produto
   const calcularEstoqueTotal = () => {
@@ -722,7 +752,7 @@ const ProductCard = ({ product, onProductClick }) => {
 
   const cardStyle = {
     background: 'white',
-    borderRadius: '14px',
+    borderRadius: isMobile ? '12px' : '14px',
     overflow: 'hidden',
     boxShadow: isHovered ? '0 17px 21px -4px rgba(0,0,0,0.1)' : '0 1px 3px rgba(0,0,0,0.1)',
     cursor: 'pointer',
@@ -731,7 +761,7 @@ const ProductCard = ({ product, onProductClick }) => {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    transform: 'scale(0.85)',
+    transform: isMobile ? 'scale(1)' : 'scale(0.85)',
     transformOrigin: 'center center'
   };
 
@@ -759,9 +789,9 @@ const ProductCard = ({ product, onProductClick }) => {
     transform: 'translate(-50%, -50%) rotate(-15deg)',
     background: 'rgba(0,0,0,0.85)',
     color: 'white',
-    fontSize: '14px',
+    fontSize: isMobile ? '12px' : '14px',
     fontWeight: 'bold',
-    padding: '8px 20px',
+    padding: isMobile ? '6px 16px' : '8px 20px',
     borderRadius: '4px',
     letterSpacing: '2px',
     zIndex: 5,
@@ -771,19 +801,19 @@ const ProductCard = ({ product, onProductClick }) => {
 
   const photoBadgeStyle = {
     position: 'absolute',
-    top: '10px',
-    left: '10px',
+    top: isMobile ? '8px' : '10px',
+    left: isMobile ? '8px' : '10px',
     background: 'rgba(0,0,0,0.6)',
     backdropFilter: 'blur(4px)',
     color: 'white',
-    fontSize: '10px',
-    padding: '3px 7px',
+    fontSize: isMobile ? '9px' : '10px',
+    padding: isMobile ? '2px 6px' : '3px 7px',
     borderRadius: '9999px',
     zIndex: 2
   };
 
   const infoStyle = {
-    padding: '17px',
+    padding: isMobile ? '14px' : '17px',
     flex: 1,
     display: 'flex',
     flexDirection: 'column'
@@ -792,22 +822,23 @@ const ProductCard = ({ product, onProductClick }) => {
   const tagsStyle = {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '5px',
-    marginBottom: '10px'
+    gap: isMobile ? '4px' : '5px',
+    marginBottom: isMobile ? '8px' : '10px'
   };
 
   const titleStyle = {
     fontWeight: '600',
     fontFamily: "'Inter', sans-serif",
     color: '#1e293b',
-    marginBottom: '7px',
-    fontSize: '15px',
+    marginBottom: isMobile ? '6px' : '7px',
+    fontSize: isMobile ? '13px' : '15px',
     minHeight: '8px',
     overflow: 'hidden',
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
-    flex: 1
+    flex: 1,
+    lineHeight: 1.3
   };
 
   const footerStyle = {
@@ -815,12 +846,12 @@ const ProductCard = ({ product, onProductClick }) => {
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 'auto',
-    paddingTop: '4px',
+    paddingTop: isMobile ? '3px' : '4px',
     borderTop: '1px solid #f1f5f9'
   };
 
   const priceStyle = {
-    fontSize: '22px',
+    fontSize: isMobile ? '18px' : '22px',
     fontWeight: 'bold',
     color: '#0fbe40ff'
   };
@@ -828,8 +859,8 @@ const ProductCard = ({ product, onProductClick }) => {
   const getAddButtonStyle = () => {
     if (added) {
       return {
-        width: '34px',
-        height: '34px',
+        width: isMobile ? '36px' : '34px',
+        height: isMobile ? '36px' : '34px',
         borderRadius: '10px',
         display: 'flex',
         alignItems: 'center',
@@ -843,8 +874,8 @@ const ProductCard = ({ product, onProductClick }) => {
     }
     if (esgotado) {
       return {
-        width: '34px',
-        height: '34px',
+        width: isMobile ? '36px' : '34px',
+        height: isMobile ? '36px' : '34px',
         borderRadius: '10px',
         display: 'flex',
         alignItems: 'center',
@@ -857,8 +888,8 @@ const ProductCard = ({ product, onProductClick }) => {
       };
     }
     return {
-      width: '34px',
-      height: '34px',
+      width: isMobile ? '36px' : '34px',
+      height: isMobile ? '36px' : '34px',
       borderRadius: '10px',
       display: 'flex',
       alignItems: 'center',
@@ -875,15 +906,17 @@ const ProductCard = ({ product, onProductClick }) => {
     <div
       onClick={() => onProductClick(product)}
       style={cardStyle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
+      onTouchStart={() => isMobile && setIsHovered(true)}
+      onTouchEnd={() => isMobile && setIsHovered(false)}
     >
       <div style={imageContainerStyle}>
         {product.imagens && product.imagens.length > 0 ? (
           <img src={product.imagens[0]} alt={product.nome} style={imageStyle} />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Package style={{ width: '54px', height: '54px', color: '#cbd5e1' }} />
+            <Package size={isMobile ? 40 : 54} color="#cbd5e1" />
           </div>
         )}
         
@@ -900,9 +933,9 @@ const ProductCard = ({ product, onProductClick }) => {
         <div style={tagsStyle}>
           {product.tipo && (
             <span style={{
-              padding: '2px 7px',
+              padding: isMobile ? '2px 6px' : '2px 7px',
               borderRadius: '9999px',
-              fontSize: '9px',
+              fontSize: isMobile ? '8px' : '9px',
               fontWeight: 'bold',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
@@ -923,7 +956,7 @@ const ProductCard = ({ product, onProductClick }) => {
             disabled={esgotado}
             style={getAddButtonStyle()}
           >
-            {added ? <Check style={{ width: '17px', height: '17px' }} /> : <Plus style={{ width: '17px', height: '17px' }} />}
+            {added ? <Check size={isMobile ? 16 : 17} /> : <Plus size={isMobile ? 16 : 17} />}
           </button>
         </div>
       </div>
@@ -953,12 +986,12 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
-    padding: '16px'
+    padding: isMobile ? '12px' : '16px'
   };
 
   const modalStyle = {
     background: 'white',
-    borderRadius: '24px',
+    borderRadius: isMobile ? '20px' : '24px',
     width: '100%',
     maxWidth: '448px',
     maxHeight: '85vh',
@@ -969,7 +1002,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
   };
 
   const headerStyle = {
-    padding: '24px',
+    padding: isMobile ? '20px' : '24px',
     borderBottom: '1px solid #f1f5f9',
     display: 'flex',
     justifyContent: 'space-between',
@@ -983,8 +1016,8 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
   };
 
   const iconContainerStyle = {
-    width: '40px',
-    height: '40px',
+    width: isMobile ? '36px' : '40px',
+    height: isMobile ? '36px' : '40px',
     background: '#f3e8ff',
     borderRadius: '12px',
     display: 'flex',
@@ -993,15 +1026,15 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
   };
 
   const titleStyle = {
-    fontSize: '20px',
+    fontSize: isMobile ? '18px' : '20px',
     fontWeight: 'bold',
     color: '#1e293b',
     margin: 0
   };
 
   const closeButtonStyle = {
-    width: '40px',
-    height: '40px',
+    width: isMobile ? '36px' : '40px',
+    height: isMobile ? '36px' : '40px',
     borderRadius: '12px',
     display: 'flex',
     alignItems: 'center',
@@ -1014,7 +1047,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
   const contentStyle = {
     flex: 1,
     overflow: 'auto',
-    padding: '16px'
+    padding: isMobile ? '12px' : '16px'
   };
 
   const emptyStyle = {
@@ -1050,8 +1083,8 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
   };
 
   const itemImageStyle = {
-    width: '50px',
-    height: '50px',
+    width: isMobile ? '60px' : '50px',
+    height: isMobile ? '60px' : '50px',
     background: 'white',
     borderRadius: '10px',
     overflow: 'hidden',
@@ -1059,7 +1092,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
   };
 
   const footerStyle = {
-    padding: '24px',
+    padding: isMobile ? '20px' : '24px',
     background: '#f8fafc',
     borderTop: '1px solid #f1f5f9'
   };
@@ -1075,7 +1108,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
     width: '100%',
     background: '#DAC8B3',
     color: '#1e293b',
-    padding: '16px',
+    padding: isMobile ? '14px' : '16px',
     borderRadius: '16px',
     fontWeight: 'bold',
     border: 'none',
@@ -1084,7 +1117,8 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s ease',
+    fontSize: isMobile ? '15px' : '16px'
   };
 
   // Tamanhos responsivos para mobile
@@ -1099,12 +1133,12 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
         <div style={headerStyle}>
           <div style={headerLeftStyle}>
             <div style={iconContainerStyle}>
-              <ShoppingCart style={{ width: '20px', height: '20px', color: '#9333ea' }} />
+              <ShoppingCart size={isMobile ? 18 : 20} color="#9333ea" />
             </div>
             <h2 style={titleStyle}>Seu Carrinho</h2>
           </div>
           <button onClick={onClose} style={closeButtonStyle}>
-            <X style={{ width: '20px', height: '20px', color: '#94a3b8' }} />
+            <X size={isMobile ? 18 : 20} color="#94a3b8" />
           </button>
         </div>
 
@@ -1112,7 +1146,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
           {cart.length === 0 ? (
             <div style={emptyStyle}>
               <div style={emptyIconStyle}>
-                <ShoppingCart style={{ width: '40px', height: '40px', color: '#cbd5e1' }} />
+                <ShoppingCart size={32} color="#cbd5e1" />
               </div>
               <p style={{ color: '#94a3b8', fontWeight: '500', margin: 0 }}>Seu carrinho está vazio</p>
             </div>
@@ -1125,7 +1159,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                       <img src={item.imagens[0]} alt={item.nome} style={{ width: '100%', objectFit: 'contain' }} />
                     ) : (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Package style={{ width: '20px', height: '20px', color: '#cbd5e1' }} />
+                        <Package size={20} color="#cbd5e1" />
                       </div>
                     )}
                   </div>
@@ -1134,7 +1168,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                     <h4 style={{ 
                       fontWeight: '600', 
                       color: '#1e293b', 
-                      fontSize: '13px', 
+                      fontSize: isMobile ? '14px' : '13px', 
                       margin: 0, 
                       wordWrap: 'break-word',
                       overflowWrap: 'break-word',
@@ -1148,7 +1182,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                     
                     {item.tamanhoSelecionado && item.tamanhoSelecionado !== 'UNICO' && (
                       <span style={{ 
-                        fontSize: '11px', 
+                        fontSize: isMobile ? '12px' : '11px', 
                         color: '#64748b', 
                         background: '#f1f5f9', 
                         padding: '2px 6px', 
@@ -1160,7 +1194,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                       </span>
                     )}
                     
-                    <p style={{ color: 'rgb(15, 190, 64)', fontWeight: 'bold', margin: 0, fontSize: '13px' }}>R$ {item.preco?.toFixed(2)}</p>
+                    <p style={{ color: 'rgb(15, 190, 64)', fontWeight: 'bold', margin: 0, fontSize: isMobile ? '14px' : '13px' }}>R$ {item.preco?.toFixed(2)}</p>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
@@ -1178,9 +1212,9 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                         cursor: 'pointer'
                       }}
                     >
-                      <Minus style={{ width: quantityIconSize, height: quantityIconSize, color: '#475569' }} />
+                      <Minus size={quantityIconSize} color="#475569" />
                     </button>
-                    <span style={{ width: '24px', textAlign: 'center', fontWeight: 'bold', color: '#1e293b', fontSize: '14px' }}>{item.quantidade}</span>
+                    <span style={{ width: '24px', textAlign: 'center', fontWeight: 'bold', color: '#1e293b', fontSize: isMobile ? '15px' : '14px' }}>{item.quantidade}</span>
                     <button
                       onClick={() => updateQuantity(item.key, item.quantidade + 1)}
                       style={{
@@ -1195,7 +1229,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                         cursor: 'pointer'
                       }}
                     >
-                      <Plus style={{ width: quantityIconSize, height: quantityIconSize, color: '#475569' }} />
+                      <Plus size={quantityIconSize} color="#475569" />
                     </button>
                   </div>
 
@@ -1214,7 +1248,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                       flexShrink: 0
                     }}
                   >
-                    <Trash2 style={{ width: trashIconSize, height: trashIconSize, color: '#ef4444' }} />
+                    <Trash2 size={trashIconSize} color="#ef4444" />
                   </button>
                 </div>
               ))}
@@ -1225,11 +1259,11 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
         {cart.length > 0 && (
           <div style={footerStyle}>
             <div style={totalRowStyle}>
-              <span style={{ color: '#475569', fontWeight: '500' }}>Total</span>
-              <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'rgb(15, 190, 64)' }}>R$ {total.toFixed(2)}</span>
+              <span style={{ color: '#475569', fontWeight: '500', fontSize: isMobile ? '16px' : 'inherit' }}>Total</span>
+              <span style={{ fontSize: isMobile ? '22px' : '24px', fontWeight: 'bold', color: 'rgb(15, 190, 64)' }}>R$ {total.toFixed(2)}</span>
             </div>
             <button onClick={onCheckout} style={checkoutButtonStyle}>
-              <Send style={{ width: '20px', height: '20px' }} />
+              <Send size={isMobile ? 18 : 20} />
               Finalizar Compra
             </button>
           </div>
@@ -1249,6 +1283,13 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     bairro: '',
     cidade: '',
   });
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const WHATSAPP_NUMBER = '5563984011186';
 
@@ -1283,12 +1324,12 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1100,
-    padding: '16px'
+    padding: isMobile ? '12px' : '16px'
   };
 
   const modalStyle = {
     background: 'white',
-    borderRadius: '24px',
+    borderRadius: isMobile ? '20px' : '24px',
     width: '100%',
     maxWidth: '448px',
     maxHeight: '90vh',
@@ -1297,7 +1338,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
   };
 
   const headerStyle = {
-    padding: '24px',
+    padding: isMobile ? '20px' : '24px',
     borderBottom: '1px solid #f1f5f9',
     display: 'flex',
     justifyContent: 'space-between',
@@ -1356,7 +1397,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     width: '100%',
     background: '#DAC8B3',
     color: '#1e293b',
-    padding: '16px',
+    padding: isMobile ? '14px' : '16px',
     borderRadius: '16px',
     fontWeight: 'bold',
     border: 'none',
@@ -1365,7 +1406,8 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    marginTop: '24px'
+    marginTop: '24px',
+    fontSize: isMobile ? '15px' : '16px'
   };
 
   return (
@@ -1374,19 +1416,19 @@ const CheckoutModal = ({ isOpen, onClose }) => {
         <div style={headerStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '40px', height: '40px', background: '#f3e8ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MapPin style={{ width: '20px', height: '20px', color: '#9333ea' }} />
+              <MapPin size={20} color="#9333ea" />
             </div>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>Dados de Entrega</h2>
+            <h2 style={{ fontSize: isMobile ? '18px' : '20px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>Dados de Entrega</h2>
           </div>
           <button
             onClick={onClose}
             style={{ width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer' }}
           >
-            <X style={{ width: '20px', height: '20px', color: '#94a3b8' }} />
+            <X size={20} color="#94a3b8" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: isMobile ? '20px' : '24px', display: 'flex', flexDirection: 'column', gap: isMobile ? '12px' : '16px' }}>
           <div style={inputContainerStyle}>
             <User style={iconStyle} />
             <input
@@ -1411,7 +1453,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: isMobile ? '8px' : '12px' }}>
             <input
               type="text"
               placeholder="Número"
@@ -1443,7 +1485,7 @@ const CheckoutModal = ({ isOpen, onClose }) => {
           </div>
 
           <button type="submit" style={submitButtonStyle}>
-            <Send style={{ width: '20px', height: '20px' }} />
+            <Send size={isMobile ? 18 : 20} />
             Enviar pelo WhatsApp
           </button>
         </form>
@@ -1455,6 +1497,13 @@ const CheckoutModal = ({ isOpen, onClose }) => {
 // --- App Content (inside CartProvider) ---
 const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, setCheckoutOpen, selectedProduct, setSelectedProduct }) => {
   const { addToCart } = useCart();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const containerStyle = {
     minHeight: '100vh',
@@ -1466,7 +1515,7 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
   const mainStyle = {
     maxWidth: '1280px',
     margin: '0 auto',
-    padding: '32px 16px',
+    padding: isMobile ? '20px 12px' : '32px 16px',
     flex: 1,
     width: '100%',
     boxSizing: 'border-box'
@@ -1500,7 +1549,7 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
   const footerStyle = {
     background: '#0f172a',
     color: 'white',
-    padding: '48px 32px',
+    padding: isMobile ? '32px 20px' : '48px 32px',
     marginTop: 'auto'
   };
 
@@ -1521,10 +1570,11 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
   const footerQuoteStyle = {
     fontFamily: "'Georgia', 'Times New Roman', serif",
     fontStyle: 'italic',
-    fontSize: '18px',
+    fontSize: isMobile ? '16px' : '18px',
     color: '#e2e8f0',
     marginBottom: '24px',
-    letterSpacing: '0.5px'
+    letterSpacing: '0.5px',
+    lineHeight: 1.4
   };
 
   return (
@@ -1536,14 +1586,20 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
         }
         @media (max-width: 768px) {
           .grid-container {
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
-            gap: 4px !important;
+            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)) !important;
+            gap: 8px !important;
           }
         }
         @media (max-width: 480px) {
           .grid-container {
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 2px !important;
+            gap: 6px !important;
+          }
+        }
+        @media (max-width: 360px) {
+          .grid-container {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 4px !important;
           }
         }
         /* Prevent zoom on iOS inputs */
@@ -1564,7 +1620,7 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
           </div>
         ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
-            <Package style={{ width: '64px', height: '64px', color: '#cbd5e1', margin: '0 auto 16px' }} />
+            <Package size={64} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
             <p style={{ color: '#94a3b8' }}>Nenhum produto encontrado</p>
           </div>
         ) : (
@@ -1583,13 +1639,13 @@ const AppContent = ({ products, loading, cartOpen, setCartOpen, checkoutOpen, se
       <footer style={footerStyle}>
         <div style={footerContentStyle}>
           <div style={footerLogoStyle}>
-            <Moon style={{ width: '24px', height: '24px', color: '#c084fc' }} />
-            <span style={{ fontWeight: 'bold', fontSize: '18px' }}>Peluma Pijamas</span>
+            <Moon size={isMobile ? 20 : 24} color="#c084fc" />
+            <span style={{ fontWeight: 'bold', fontSize: isMobile ? '16px' : '18px' }}>Peluma Pijamas</span>
           </div>
           <p style={footerQuoteStyle}>
             "Sua paz em forma de pijama"
           </p>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
+          <p style={{ color: '#64748b', fontSize: isMobile ? '13px' : '14px', margin: 0 }}>
             © 2026 Todos os direitos reservados
           </p>
         </div>
