@@ -48,6 +48,14 @@ const CartProvider = ({ children }) => {
       removeFromCart(itemKey);
       return;
     }
+    
+    // Encontrar o item no carrinho para verificar estoque
+    const item = cart.find(item => item.key === itemKey);
+    if (item && quantidade > item.estoqueAtual) {
+      // Não permitir adicionar mais que o estoque disponível
+      quantidade = item.estoqueAtual;
+    }
+    
     setCart((prev) =>
       prev.map((item) =>
         item.key === itemKey ? { ...item, quantidade } : item
@@ -218,8 +226,8 @@ const FilterBar = ({ activeFilter, onFilterChange, adultoCount, infantilCount })
     padding: isMobile ? '8px 16px' : '10px 20px',
     borderRadius: '9999px',
     border: 'none',
-    background: isActive ? '#9333ea' : '#f1f5f9',
-    color: isActive ? 'white' : '#64748b',
+    background: isActive ? 'rgb(218, 200, 179)' : '#f1f5f9',
+    color: isActive ? 'rgb(71, 85, 105)' : '#64748b',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
@@ -328,7 +336,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
   // Estoque atual para o tamanho selecionado
   const estoqueAtual = tamanhoSelecionado 
     ? Number(product.estoque?.[tamanhoSelecionado] || 0)
-    : 0;
+    : (tamanhosDisponiveis.length === 0 ? Number(product.estoque?.UNICO || product.estoque || 0) : 0);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % images.length);
@@ -399,7 +407,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     borderRadius: isMobile ? '20px' : '24px',
     width: '100%',
     maxWidth: isMobile ? '100%' : '512px',
-    maxHeight: '90vh',
+    maxHeight: isMobile ? '85vh' : '90vh',
     overflow: 'hidden',
     boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
     display: 'flex',
@@ -489,7 +497,8 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     padding: isMobile ? '20px' : '24px',
     overflow: 'auto',
     flex: 1,
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    maxHeight: isMobile ? 'calc(85vh - 100vw)' : 'auto'
   };
 
   const headerInfoStyle = {
@@ -551,16 +560,16 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     fontSize: isMobile ? '13px' : '14px',
     fontWeight: '500',
     transition: 'all 0.2s',
-    minWidth: isMobile ? '50px' : '60px',
+    minWidth: tamanhosDisponiveis.length === 1 ? 'auto' : (isMobile ? '50px' : '60px'),
     textAlign: 'center',
-    flex: '1 0 auto'
+    flex: tamanhosDisponiveis.length === 1 ? 'none' : '1 0 auto'
   });
 
   const quantidadeContainerStyle = {
     display: 'flex',
     alignItems: 'center',
     gap: isMobile ? '16px' : '12px',
-    marginBottom: isMobile ? '20px' : '24px',
+    marginBottom: isMobile ? '16px' : '20px',
     justifyContent: 'center'
   };
 
@@ -587,21 +596,44 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
     fontSize: isMobile ? '13px' : '14px',
     color: '#64748b',
     textAlign: 'center',
-    marginTop: isMobile ? '6px' : '8px'
+    marginBottom: isMobile ? '16px' : '20px'
   };
 
   const descriptionStyle = {
     color: '#64748b',
     fontSize: isMobile ? '13px' : '14px',
-    marginBottom: isMobile ? '20px' : '24px',
+    marginBottom: isMobile ? '16px' : '20px',
     lineHeight: '1.6'
+  };
+
+  // LÓGICA CORRIGIDA: Logica do botão conforme solicitado
+  const getButtonText = () => {
+    if (added) return 'Adicionado!';
+    
+    // Se há tamanhos disponíveis
+    if (tamanhosDisponiveis.length > 0) {
+      // Se nenhum tamanho foi selecionado ainda
+      if (!tamanhoSelecionado) {
+        return 'Adicionar ao Carrinho';
+      }
+      // Se um tamanho foi selecionado
+      if (estoqueAtual === 0) {
+        return 'Produto Esgotado';
+      }
+      return 'Adicionar ao Carrinho';
+    }
+    
+    // Se não há tamanhos (produto único)
+    const estoqueUnico = Number(product.estoque?.UNICO || product.estoque || 0);
+    if (estoqueUnico === 0) {
+      return 'Produto Esgotado';
+    }
+    return 'Adicionar ao Carrinho';
   };
 
   const getButtonStyle = () => {
     const tamanhoObrigatorio = tamanhosDisponiveis.length > 0;
-    const podeAdicionar = !tamanhoObrigatorio || tamanhoSelecionado;
-    const estoqueSuficiente = quantidade <= estoqueAtual;
-
+    
     if (added) {
       return {
         width: '100%',
@@ -618,10 +650,31 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         background: '#22c55e',
         transition: 'all 0.3s ease',
         boxSizing: 'border-box',
-        fontSize: isMobile ? '15px' : '16px'
+        fontSize: isMobile ? '15px' : '16px',
+        position: 'sticky',
+        bottom: '0',
+        marginTop: 'auto'
       };
     }
-    if (!podeAdicionar || !estoqueSuficiente || estoqueAtual === 0) {
+    
+    // LÓGICA CORRIGIDA: Determinar se o botão deve estar habilitado ou desabilitado
+    const podeAdicionar = () => {
+      // Se há tamanhos para selecionar
+      if (tamanhosDisponiveis.length > 0) {
+        // Se nenhum tamanho foi selecionado
+        if (!tamanhoSelecionado) {
+          return false; // Desabilitado
+        }
+        // Se um tamanho foi selecionado
+        return estoqueAtual > 0 && quantidade <= estoqueAtual;
+      }
+      
+      // Se não há tamanhos (produto único)
+      const estoqueUnico = Number(product.estoque?.UNICO || product.estoque || 0);
+      return estoqueUnico > 0 && quantidade <= estoqueUnico;
+    };
+
+    if (!podeAdicionar()) {
       return {
         width: '100%',
         padding: isMobile ? '14px' : '16px',
@@ -637,9 +690,13 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
         background: '#e2e8f0',
         opacity: 0.7,
         boxSizing: 'border-box',
-        fontSize: isMobile ? '15px' : '16px'
+        fontSize: isMobile ? '15px' : '16px',
+        position: 'sticky',
+        bottom: '0',
+        marginTop: 'auto'
       };
     }
+    
     return {
       width: '100%',
       padding: isMobile ? '14px' : '16px',
@@ -655,7 +712,10 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
       background: '#DAC8B3',
       transition: 'all 0.3s ease',
       boxSizing: 'border-box',
-      fontSize: isMobile ? '15px' : '16px'
+      fontSize: isMobile ? '15px' : '16px',
+      position: 'sticky',
+      bottom: '0',
+      marginTop: 'auto'
     };
   };
 
@@ -776,7 +836,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
             </button>
           </div>
 
-          {tamanhoSelecionado && (
+          {(tamanhoSelecionado || tamanhosDisponiveis.length === 0) && (
             <div style={estoqueInfoStyle}>
               Estoque disponível: {estoqueAtual} unidades
             </div>
@@ -785,12 +845,16 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
           {product.descricao && (
             <p style={descriptionStyle}>{product.descricao}</p>
           )}
+        </div>
 
+        <div style={{ padding: isMobile ? '0 20px 20px' : '0 24px 24px' }}>
           <button
             onClick={handleAddToCart}
             disabled={
-              (tamanhosDisponiveis.length > 0 && !tamanhoSelecionado) || 
-              estoqueAtual === 0 || 
+              added ||
+              (tamanhosDisponiveis.length > 0 && !tamanhoSelecionado) ||
+              (tamanhosDisponiveis.length === 0 && Number(product.estoque?.UNICO || product.estoque || 0) === 0) ||
+              (tamanhoSelecionado && estoqueAtual === 0) ||
               quantidade > estoqueAtual
             }
             style={getButtonStyle()}
@@ -803,7 +867,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart }) => {
             ) : (
               <>
                 <ShoppingCart size={isMobile ? 18 : 20} />
-                {estoqueAtual === 0 ? 'Produto Esgotado' : 'Adicionar ao Carrinho'}
+                {getButtonText()}
               </>
             )}
           </button>
